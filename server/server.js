@@ -7,17 +7,48 @@ import "dotenv/config.js";
 import http from 'http';
 import cors from 'cors';
 import { connectDB } from './lib/db.js';
+import userRouter from './routes/userRoutes.js';
+import messageRouter from './routes/messageRoutes.js';
+import { Server } from 'socket.io';
+
 
 // create express app and http server
 const app = express();
 const server = http.createServer(app);
+// setup socket.io server
+export const io = new Server(server, {
+    cors: {
+        origin: "*",
+    }
+});
 
+//srote online users
+export const userSocketMap = {};
+
+// socket connection handler
+io.on('connection', (socket) => {
+    const userId = socket.handshake.query.userId;
+    
+    console.log("User connected", userId);
+
+    if(userId) userSocketMap[userId] = socket.id;
+    // emit online users to all connected clients
+    io.emit('getOnlineUsers', Object.keys(userSocketMap));
+    socket.on('disconnect', () => {
+        console.log("User disconnected", userId);
+        delete userSocketMap[userId];
+        io.emit('getOnlineUsers', Object.keys(userSocketMap));
+    });
+});
 
 // middlewares setup
 app.use(express.json({limit: '4mb'}));
 app.use(cors());
-// expose a GET endpoint at /api/status
+
+// route setup
 app.get('/api/status', (req, res) => res.send('API is running...'));
+app.use("/api/auth", userRouter);
+app.use("/api/messages", messageRouter);
 
 // connect to the database mongodb
 await connectDB();
