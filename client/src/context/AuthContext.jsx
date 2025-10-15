@@ -17,7 +17,7 @@ export const AuthProvider = ({children}) => {
     // Check if user is authenticated and if so,  set the user data and connect the socket
     const checkAuth = async () => {
         try{
-            const {data} =  await axios.get('/auth/check-auth');
+            const {data} =  await axios.get('/api/auth/check');
             if(data.success){
                 setAuthUser(data.user);
                 connectSocket(data.user);
@@ -30,7 +30,7 @@ export const AuthProvider = ({children}) => {
 
     const login = async(state, credential)=>{
         try{
-            const {data} = await axios.post(`/auth/login/${state}`, credential);
+            const {data} = await axios.post(`/api/auth/${state}`, credential);
             if(data.success){
                 setAuthUser(data.userData);
                 connectSocket(data.userData);
@@ -63,7 +63,7 @@ export const AuthProvider = ({children}) => {
 
     const updateProfile = async (body) => {
         try{
-            const {data} = await axios.put('/auth/update-profile', body);
+            const {data} = await axios.put('/api/auth/update-profile', body);
             if(data.success){
                 setAuthUser(data.user);
                 toast.success("Profile updated successfully");
